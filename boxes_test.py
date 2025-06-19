@@ -7,7 +7,7 @@ import time
 
 base_dir = 'eval/box/txt'
 
-seq_dirs = [f"seq_{i:02d}" for i in range(1)] # stores each seq dir from seq_00 to seq_05
+seq_dirs = [f"seq_{i:02d}" for i in range(1, 6)] # stores each seq dir from seq_00 to seq_05
 
 for seq in seq_dirs:
     seq_path = os.path.join(base_dir, seq)
@@ -67,6 +67,8 @@ for seq in seq_dirs:
                     events_by_frame[window['frame']].append((ts, x, y, pol))
                     break
 
+    output_dir = seq + "_output"
+    os.makedirs(output_dir, exist_ok=True)
     # Plays video
     for frame in frame_windows:
         img_path = os.path.join(seq_path, 'img', frame['frame'])
@@ -76,13 +78,17 @@ for seq in seq_dirs:
             color = (0, 255, 0) if pol == 1 else (0, 0, 255)
             cv2.circle(img, (x, y), 1, color, -1)
 
+        # Saves annotated frame to output_dir
+        output_path = os.path.join(output_dir, frame['frame'])
+        cv2.imwrite(output_path, img)
+
         start_time = frame['start']
         end_time = frame['end']
-        duration = end_time - start_time  # in microseconds or milliseconds?
+        duration = end_time - start_time
     
         delay = duration / 1_000 if duration > 100 else 33  # fallback delay
 
         # Show frame (same as before)
-        cv2.imshow("Video", img)
-        if cv2.waitKey(int(delay)) & 0xFF == ord('q'):
-            break
+        # cv2.imshow("Video", img)
+        # if cv2.waitKey(int(delay)) & 0xFF == ord('q'):
+        #     break

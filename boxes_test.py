@@ -7,7 +7,7 @@ import time
 
 base_dir = 'eval/box/txt'
 
-seq_dirs = [f"seq_{i:02d}" for i in range(1, 6)] # stores each seq dir from seq_00 to seq_05
+seq_dirs = [f"seq_{i:02d}" for i in range(1,5)] # stores each seq dir from seq_00 to seq_05
 
 for seq in seq_dirs:
     seq_path = os.path.join(base_dir, seq)
@@ -69,22 +69,33 @@ for seq in seq_dirs:
 
     output_dir = seq + "_output"
     os.makedirs(output_dir, exist_ok=True)
+    f = open(seq + '.txt', 'w')
     # Plays video
     for frame in frame_windows:
         img_path = os.path.join(seq_path, 'img', frame['frame'])
-        img = cv2.imread(img_path)
+        original_img = cv2.imread(img_path)
 
+        # Create a blank image (same size, black background)
+        event_img = np.zeros_like(original_img)
+
+        # Draw each event as a pixel
         for ts, x, y, pol in events_by_frame[frame['frame']]:
-            color = (0, 255, 0) if pol == 1 else (0, 0, 255)
-            cv2.circle(img, (x, y), 1, color, -1)
+            if 0 <= x < event_img.shape[1] and 0 <= y < event_img.shape[0]:
+                color = (0, 255, 0) if pol == 1 else (0, 0, 255)  # green for pol 1, red for 0
+                event_img[y, x] = color
 
-        # Saves annotated frame to output_dir
+        # Combine original and event-only images side by side
+        combined_img = np.hstack((original_img, event_img))
+
+        # Save result
         output_path = os.path.join(output_dir, frame['frame'])
-        cv2.imwrite(output_path, img)
+        cv2.imwrite(output_path, combined_img)
 
         start_time = frame['start']
         end_time = frame['end']
         duration = end_time - start_time
+
+        f.write('file \'' + output_path + '\'\nduration ' + str(duration) + '\n')
     
         delay = duration / 1_000 if duration > 100 else 33  # fallback delay
 
@@ -92,3 +103,4 @@ for seq in seq_dirs:
         # cv2.imshow("Video", img)
         # if cv2.waitKey(int(delay)) & 0xFF == ord('q'):
         #     break
+    f.close()

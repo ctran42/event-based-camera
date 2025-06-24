@@ -7,7 +7,7 @@ import time
 
 base_dir = 'eval/box/txt'
 
-seq_dirs = [f"seq_{i:02d}" for i in range(1,5)] # stores each seq dir from seq_00 to seq_05
+seq_dirs = [f"seq_{i:02d}" for i in range(1)] # stores each seq dir from seq_00 to seq_05
 
 for seq in seq_dirs:
     seq_path = os.path.join(base_dir, seq)
@@ -39,7 +39,10 @@ for seq in seq_dirs:
             'end': end_ts
         })
     
-    events_by_frame = defaultdict(list)
+    # Each frame will have a dictionary (events_by_frame) that stores a dictionary (pixel_intensity) that stores the coordinates
+    # as a key, and its 'intensity' (overall polarity if multiple events occur there)
+    events_by_frame = defaultdict(lambda: defaultdict(int))
+    pixel_intensity = defaultdict(list)
     index = 0
     size = len(frame_windows)
     curr_frame = frame_windows[index]
@@ -51,6 +54,7 @@ for seq in seq_dirs:
             y = int(y)
             pol = int(pol)
             print(line)
+            # Finds correct frame index if not already correct
             while not (curr_frame['start'] <= ts < curr_frame['end']):
                 index += 1
                 if index < size:
@@ -58,18 +62,17 @@ for seq in seq_dirs:
                 else:
                     break
             
-            events_by_frame[curr_frame['frame']].append((ts, x, y, pol))
+            events_by_frame[curr_frame['frame']][(x, y)] += 1 if pol == 1 else -1
+            # for frame, coord_dict in events_by_frame.items():
+            #     print(f"Frame {frame}:")
+            #     for coord, val in coord_dict.items():
+            #         print(f"  Coordinate {coord} → Value {val}")
 
-            # Find which frame this event belongs to
-            for window in frame_windows:
-                print
-                if window['start'] <= ts < window['end']:
-                    events_by_frame[window['frame']].append((ts, x, y, pol))
-                    break
-
+    
     output_dir = seq + "_output"
     os.makedirs(output_dir, exist_ok=True)
     f = open(seq + '.txt', 'w')
+    intensity_step = 80
     # Plays video
     for frame in frame_windows:
         img_path = os.path.join(seq_path, 'img', frame['frame'])
@@ -79,9 +82,11 @@ for seq in seq_dirs:
         event_img = np.zeros_like(original_img)
 
         # Draw each event as a pixel
-        for ts, x, y, pol in events_by_frame[frame['frame']]:
+        for (x, y), val in events_by_frame[frame['frame']].items():
             if 0 <= x < event_img.shape[1] and 0 <= y < event_img.shape[0]:
-                color = (0, 255, 0) if pol == 1 else (0, 0, 255)  # green for pol 1, red for 0
+                green = val < 0
+                rgb_val = min(255, abs(val) * intensity_step)
+                color = (0, rgb_val, 0) if green else (0, 0, rgb_val)  # green for pol 1, red for 0
                 event_img[y, x] = color
 
         # Combine original and event-only images side by side

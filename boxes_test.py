@@ -1,3 +1,5 @@
+# ffmpeg -f concat -safe 0 -i seq_00.txt -vsync vfr -pix_fmt yuv420p out0.mp4
+
 import ast
 import os
 from collections import defaultdict
@@ -7,7 +9,7 @@ import time
 
 base_dir = 'eval/box/txt'
 
-seq_dirs = [f"seq_{i:02d}" for i in range(1)] # stores each seq dir from seq_00 to seq_05
+seq_dirs = [f"seq_{i:02d}" for i in range(1,5)] # stores each seq dir from seq_00 to seq_05
 
 for seq in seq_dirs:
     seq_path = os.path.join(base_dir, seq)

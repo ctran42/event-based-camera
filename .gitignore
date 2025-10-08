@@ -1,0 +1,65 @@
+# Only track Python source files by default
+
+# Ignore everything
+*
+
+# But not these directories (so we can still recurse to find .py)
+!.gitignore
+!**/*.py
+
+# Allow git attributes / workflows if you later add them
+!.gitattributes
+!.github/
+
+# Common Python specific ignores (bytecode, venv, build artifacts)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Packaging / build
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs / caches
+*.log
+.cache/
+
+# Images/videos (if accidentally forced add earlier you can 'git rm --cached')
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Data files
+*.txt
+*.json
+*.aedat4
+*.csv
+*.npy
+*.npz
+*.pkl
+*.pickle
+
+# Keep meta.txt if needed? (uncomment next line to track meta.txt)
+#!meta.txt
